@@ -12,7 +12,12 @@ const GodfatherCalculator = () => {
   const [ownedRare, setOwnedRare] = useState(0);
   const [ownedElite, setOwnedElite] = useState(0);
   const [ownedGrand, setOwnedGrand] = useState(0);
-  const [ownedLegacyCoins, setOwnedLegacyCoins] = useState(0);
+  
+  const [ownedLegacyPlain, setOwnedLegacyPlain] = useState(0);
+  const [ownedLegacySimple, setOwnedLegacySimple] = useState(0);
+  const [ownedLegacyRare, setOwnedLegacyRare] = useState(0);
+  const [ownedLegacyElite, setOwnedLegacyElite] = useState(0);
+  const [ownedLegacyGrand, setOwnedLegacyGrand] = useState(0);
 
   const equipmentCosts = {
     tops: { contracts: 10, legacyCoins: 30 },
@@ -40,13 +45,15 @@ const GodfatherCalculator = () => {
   ];
 
   const levelNames = {
-    'creation': 'Creation', 'plain': 'Plain', 'simple': 'Simple',
+    'creation': 'None', 'plain': 'Plain', 'simple': 'Simple',
     'simple+1': 'Simple +1', 'simple+2': 'Simple +2', 'simple+3': 'Simple +3',
     'rare': 'Rare', 'rare+1': 'Rare +1', 'rare+2': 'Rare +2', 'rare+3': 'Rare +3',
     'elite': 'Elite', 'elite+1': 'Elite +1', 'elite+2': 'Elite +2', 'elite+3': 'Elite +3',
     'grand': 'Grand', 'grand+1': 'Grand +1', 'grand+2': 'Grand +2', 'grand+3': 'Grand +3',
     'legacy': 'Legacy'
   };
+
+  const targetLevels = levels.filter(level => level !== 'creation');
 
   const requiresLegacyCoins = useMemo(() => {
     const targetIdx = levels.indexOf(targetLevel);
@@ -60,9 +67,9 @@ const GodfatherCalculator = () => {
     
     if (startIdx >= endIdx) {
       return { 
-        needed: { plain: 0, simple: 0, rare: 0, elite: 0, legacyCoins: 0, totalPlainEquiv: 0 },
-        consolidated: { grand: 0, elite: 0, rare: 0, simple: 0, plain: 0, legacyCoins: 0, totalPlainEquiv: 0 },
-        remaining: { grand: 0, elite: 0, rare: 0, simple: 0, plain: 0, legacyCoins: 0, totalPlainEquiv: 0 }
+        needed: { plain: 0, simple: 0, rare: 0, elite: 0, legacyCoins: 0, totalPlainEquiv: 0, totalLegacyPlainEquiv: 0 },
+        consolidated: { grand: 0, elite: 0, rare: 0, simple: 0, plain: 0, legacyGrand: 0, legacyElite: 0, legacyRare: 0, legacySimple: 0, legacyPlain: 0, totalPlainEquiv: 0, totalLegacyPlainEquiv: 0 },
+        remaining: { grand: 0, elite: 0, rare: 0, simple: 0, plain: 0, legacyGrand: 0, legacyElite: 0, legacyRare: 0, legacySimple: 0, legacyPlain: 0, totalPlainEquiv: 0, totalLegacyPlainEquiv: 0 }
       };
     }
 
@@ -87,6 +94,7 @@ const GodfatherCalculator = () => {
 
     const totalPlainEquiv = plain + (simple * 4) + (rare * 16) + (elite * 64);
 
+    // Consolidate contracts
     let consolidatedGrand = 0, consolidatedElite = 0, consolidatedRare = 0;
     let consolidatedSimple = 0, consolidatedPlain = 0;
     
@@ -118,10 +126,51 @@ const GodfatherCalculator = () => {
     consolidatedSimple = remainingSimple;
     consolidatedPlain = remainingPlain;
 
+    // Consolidate legacy coins to highest grade (same as contracts)
+    // Note: Required legacy coins are in Elite grade, but we can have all rarities
+    let totalLegacyPlainEquiv = legacyCoins; // Elite Legacy Coins converted to Plain equivalent
+    let consolidatedLegacyGrand = 0, consolidatedLegacyElite = 0, consolidatedLegacyRare = 0;
+    let consolidatedLegacySimple = 0, consolidatedLegacyPlain = 0;
+    
+    // Convert Elite grade to Plain grade equivalent for consolidation
+    let legacyInPlainEquiv = legacyCoins * 64; // Elite = 64 Plain
+    
+    consolidatedLegacyGrand = Math.floor(legacyInPlainEquiv / 256);
+    legacyInPlainEquiv = legacyInPlainEquiv % 256;
+    
+    consolidatedLegacyElite = Math.floor(legacyInPlainEquiv / 64);
+    legacyInPlainEquiv = legacyInPlainEquiv % 64;
+    
+    consolidatedLegacyRare = Math.floor(legacyInPlainEquiv / 16);
+    legacyInPlainEquiv = legacyInPlainEquiv % 16;
+    
+    consolidatedLegacySimple = Math.floor(legacyInPlainEquiv / 4);
+    legacyInPlainEquiv = legacyInPlainEquiv % 4;
+    
+    consolidatedLegacyPlain = legacyInPlainEquiv;
+
+    // Calculate owned totals
     const ownedTotal = ownedPlain + (ownedSimple * 4) + (ownedRare * 16) + (ownedElite * 64) + (ownedGrand * 256);
+    // Legacy coins inventory converted to Plain equivalent
+    const ownedLegacyTotal = ownedLegacyPlain + (ownedLegacySimple * 4) + (ownedLegacyRare * 16) + (ownedLegacyElite * 64) + (ownedLegacyGrand * 256);
+    
     let remainingNeeded = totalPlainEquiv - ownedTotal;
     if (remainingNeeded < 0) remainingNeeded = 0;
     
+    // Calculate remaining legacy needed in Plain equivalent
+    // First convert required Elite grade to Plain equivalent
+    let totalLegacyInPlainEquiv = legacyCoins * 64; // Elite grade × 64 = Plain equivalent
+    let remainingLegacyNeeded = totalLegacyInPlainEquiv - ownedLegacyTotal;
+    if (remainingLegacyNeeded < 0) remainingLegacyNeeded = 0;
+    
+    console.log('Legacy Debug:', {
+      required: legacyCoins,
+      requiredInPlain: totalLegacyInPlainEquiv,
+      owned: ownedLegacyTotal,
+      remaining: remainingLegacyNeeded
+    });
+    
+    // Convert remaining contracts needed
     let stillNeedGrand = Math.floor(remainingNeeded / 256);
     remainingNeeded = remainingNeeded % 256;
     let stillNeedElite = Math.floor(remainingNeeded / 64);
@@ -132,21 +181,38 @@ const GodfatherCalculator = () => {
     remainingNeeded = remainingNeeded % 4;
     let stillNeedPlain = remainingNeeded;
 
-    const stillNeedLegacyCoins = legacyCoins - ownedLegacyCoins < 0 ? 0 : legacyCoins - ownedLegacyCoins;
+    // Convert remaining legacy coins needed (same as contracts)
+    let stillNeedLegacyGrand = Math.floor(remainingLegacyNeeded / 256);
+    remainingLegacyNeeded = remainingLegacyNeeded % 256;
+    let stillNeedLegacyElite = Math.floor(remainingLegacyNeeded / 64);
+    remainingLegacyNeeded = remainingLegacyNeeded % 64;
+    let stillNeedLegacyRare = Math.floor(remainingLegacyNeeded / 16);
+    remainingLegacyNeeded = remainingLegacyNeeded % 16;
+    let stillNeedLegacySimple = Math.floor(remainingLegacyNeeded / 4);
+    remainingLegacyNeeded = remainingLegacyNeeded % 4;
+    let stillNeedLegacyPlain = remainingLegacyNeeded;
 
     return {
-      needed: { plain, simple, rare, elite, legacyCoins, totalPlainEquiv },
+      needed: { plain, simple, rare, elite, legacyCoins, totalPlainEquiv, totalLegacyPlainEquiv },
       consolidated: { 
         grand: consolidatedGrand, elite: consolidatedElite, rare: consolidatedRare,
-        simple: consolidatedSimple, plain: consolidatedPlain, legacyCoins, totalPlainEquiv 
+        simple: consolidatedSimple, plain: consolidatedPlain,
+        legacyGrand: consolidatedLegacyGrand, legacyElite: consolidatedLegacyElite,
+        legacyRare: consolidatedLegacyRare, legacySimple: consolidatedLegacySimple,
+        legacyPlain: consolidatedLegacyPlain,
+        totalPlainEquiv, totalLegacyPlainEquiv: legacyCoins * 64
       },
       remaining: { 
         grand: stillNeedGrand, elite: stillNeedElite, rare: stillNeedRare,
-        simple: stillNeedSimple, plain: stillNeedPlain, legacyCoins: stillNeedLegacyCoins,
-        totalPlainEquiv: totalPlainEquiv - ownedTotal < 0 ? 0 : totalPlainEquiv - ownedTotal
+        simple: stillNeedSimple, plain: stillNeedPlain,
+        legacyGrand: stillNeedLegacyGrand, legacyElite: stillNeedLegacyElite,
+        legacyRare: stillNeedLegacyRare, legacySimple: stillNeedLegacySimple,
+        legacyPlain: stillNeedLegacyPlain,
+        totalPlainEquiv: totalPlainEquiv - ownedTotal < 0 ? 0 : totalPlainEquiv - ownedTotal,
+        totalLegacyPlainEquiv: totalLegacyInPlainEquiv - ownedLegacyTotal < 0 ? 0 : totalLegacyInPlainEquiv - ownedLegacyTotal
       }
     };
-  }, [equipmentType, currentLevel, targetLevel, ownedPlain, ownedSimple, ownedRare, ownedElite, ownedGrand, ownedLegacyCoins]);
+  }, [equipmentType, currentLevel, targetLevel, ownedPlain, ownedSimple, ownedRare, ownedElite, ownedGrand, ownedLegacyPlain, ownedLegacySimple, ownedLegacyRare, ownedLegacyElite, ownedLegacyGrand]);
 
   return (
     <div className="calculator-container">
@@ -181,7 +247,7 @@ const GodfatherCalculator = () => {
             <div className="form-group">
               <label>Target Level</label>
               <select value={targetLevel} onChange={(e) => setTargetLevel(e.target.value)}>
-                {levels.map(level => (
+                {targetLevels.map(level => (
                   <option key={level} value={level}>{levelNames[level]}</option>
                 ))}
               </select>
@@ -226,17 +292,47 @@ const GodfatherCalculator = () => {
               <div className="total-owned">
                 Total Contracts (Plain Equiv): {(ownedPlain + (ownedSimple * 4) + (ownedRare * 16) + (ownedElite * 64) + (ownedGrand * 256)).toLocaleString()}
               </div>
+              <div className="dismantle-note">
+                💡 Elite Equipment Dismantle Values: Tops = {dismantleValues.tops}, Range = {dismantleValues.range}, Melee = {dismantleValues.melee}, Pants = {dismantleValues.pants}, Shoes = {dismantleValues.shoes}, Accessory = {dismantleValues.accessory} Plain Contracts
+              </div>
             </div>
 
             {requiresLegacyCoins && (
               <div className="legacy-section">
                 <div className="section-header">
                   <Coins size={20} />
-                  <div className="subsection-title">Elite Legacy Coins</div>
+                  <div className="subsection-title">Legacy Coins</div>
                 </div>
-                <input type="number" min="0" className="legacy-input"
-                  value={ownedLegacyCoins} placeholder="Enter your legacy coins"
-                  onChange={(e) => setOwnedLegacyCoins(parseInt(e.target.value) || 0)} />
+                <div className="inventory-grid">
+                  <div className="input-group">
+                    <label>Grand</label>
+                    <input type="number" min="0" value={ownedLegacyGrand} 
+                      onChange={(e) => setOwnedLegacyGrand(parseInt(e.target.value) || 0)} />
+                  </div>
+                  <div className="input-group">
+                    <label>Elite</label>
+                    <input type="number" min="0" value={ownedLegacyElite} 
+                      onChange={(e) => setOwnedLegacyElite(parseInt(e.target.value) || 0)} />
+                  </div>
+                  <div className="input-group">
+                    <label>Rare</label>
+                    <input type="number" min="0" value={ownedLegacyRare} 
+                      onChange={(e) => setOwnedLegacyRare(parseInt(e.target.value) || 0)} />
+                  </div>
+                  <div className="input-group">
+                    <label>Simple</label>
+                    <input type="number" min="0" value={ownedLegacySimple} 
+                      onChange={(e) => setOwnedLegacySimple(parseInt(e.target.value) || 0)} />
+                  </div>
+                  <div className="input-group">
+                    <label>Plain</label>
+                    <input type="number" min="0" value={ownedLegacyPlain} 
+                      onChange={(e) => setOwnedLegacyPlain(parseInt(e.target.value) || 0)} />
+                  </div>
+                </div>
+                <div className="total-owned">
+                  Total Legacy Coins (Plain Equiv): {(ownedLegacyPlain + (ownedLegacySimple * 4) + (ownedLegacyRare * 16) + (ownedLegacyElite * 64) + (ownedLegacyGrand * 256)).toLocaleString()}
+                </div>
               </div>
             )}
           </div>
@@ -249,6 +345,8 @@ const GodfatherCalculator = () => {
             <>
               <div className="results-section">
                 <h2>Total Required (Highest Grade)</h2>
+                
+                <div className="subsection-title" style={{marginBottom: '12px', color: '#d1d5db'}}>Godfather Contracts</div>
                 <div className="stats-grid">
                   {calculations.consolidated.grand > 0 && (
                     <div className="stat-card grand">
@@ -280,72 +378,153 @@ const GodfatherCalculator = () => {
                       <div className="stat-value">{calculations.consolidated.plain}</div>
                     </div>
                   )}
-                  {calculations.consolidated.legacyCoins > 0 && (
-                    <div className="stat-card legacy">
-                      <div className="stat-label">
-                        <Coins size={16} /> Elite Legacy Coins
-                      </div>
-                      <div className="stat-value">{calculations.consolidated.legacyCoins}</div>
-                    </div>
-                  )}
                 </div>
                 <div className="total-box">
                   <div className="stat-label">Total Contracts (Plain Equivalent)</div>
                   <div className="total-value">{calculations.consolidated.totalPlainEquiv.toLocaleString()}</div>
                 </div>
+
+                {requiresLegacyCoins && (
+                  <>
+                    <div className="subsection-title" style={{marginTop: '24px', marginBottom: '12px', color: '#fcd34d', display: 'flex', alignItems: 'center', gap: '8px'}}>
+                      <Coins size={18} /> Legacy Coins
+                    </div>
+                    <div className="stats-grid">
+                      {calculations.consolidated.legacyGrand > 0 && (
+                        <div className="stat-card legacy">
+                          <div className="stat-label">Grand Legacy</div>
+                          <div className="stat-value">{calculations.consolidated.legacyGrand}</div>
+                        </div>
+                      )}
+                      {calculations.consolidated.legacyElite > 0 && (
+                        <div className="stat-card legacy">
+                          <div className="stat-label">Elite Legacy</div>
+                          <div className="stat-value">{calculations.consolidated.legacyElite}</div>
+                        </div>
+                      )}
+                      {calculations.consolidated.legacyRare > 0 && (
+                        <div className="stat-card legacy">
+                          <div className="stat-label">Rare Legacy</div>
+                          <div className="stat-value">{calculations.consolidated.legacyRare}</div>
+                        </div>
+                      )}
+                      {calculations.consolidated.legacySimple > 0 && (
+                        <div className="stat-card legacy">
+                          <div className="stat-label">Simple Legacy</div>
+                          <div className="stat-value">{calculations.consolidated.legacySimple}</div>
+                        </div>
+                      )}
+                      {calculations.consolidated.legacyPlain > 0 && (
+                        <div className="stat-card legacy">
+                          <div className="stat-label">Plain Legacy</div>
+                          <div className="stat-value">{calculations.consolidated.legacyPlain}</div>
+                        </div>
+                      )}
+                    </div>
+                    <div className="total-box">
+                      <div className="stat-label">Total Legacy Coins (Plain Equivalent)</div>
+                      <div className="total-value">{calculations.consolidated.totalLegacyPlainEquiv.toLocaleString()}</div>
+                      <div className="stat-label" style={{marginTop: '8px', fontSize: '11px', color: '#9ca3af'}}>
+                        ({(calculations.consolidated.totalLegacyPlainEquiv / 64).toFixed(0)} Elite Grade)
+                      </div>
+                    </div>
+                  </>
+                )}
               </div>
 
               <div className="results-section remaining">
                 <h2>Still Needed (After Using Your Inventory)</h2>
-                {calculations.remaining.totalPlainEquiv === 0 && calculations.remaining.legacyCoins === 0 ? (
+                {calculations.remaining.totalPlainEquiv === 0 && calculations.remaining.totalLegacyPlainEquiv === 0 ? (
                   <div className="success-message">✓ You have enough materials!</div>
                 ) : (
                   <>
-                    <div className="stats-grid">
-                      {calculations.remaining.grand > 0 && (
-                        <div className="stat-card grand">
-                          <div className="stat-label">Grand Contracts</div>
-                          <div className="stat-value">{calculations.remaining.grand}</div>
-                        </div>
-                      )}
-                      {calculations.remaining.elite > 0 && (
-                        <div className="stat-card elite">
-                          <div className="stat-label">Elite Contracts</div>
-                          <div className="stat-value">{calculations.remaining.elite}</div>
-                        </div>
-                      )}
-                      {calculations.remaining.rare > 0 && (
-                        <div className="stat-card rare">
-                          <div className="stat-label">Rare Contracts</div>
-                          <div className="stat-value">{calculations.remaining.rare}</div>
-                        </div>
-                      )}
-                      {calculations.remaining.simple > 0 && (
-                        <div className="stat-card simple">
-                          <div className="stat-label">Simple Contracts</div>
-                          <div className="stat-value">{calculations.remaining.simple}</div>
-                        </div>
-                      )}
-                      {calculations.remaining.plain > 0 && (
-                        <div className="stat-card plain">
-                          <div className="stat-label">Plain Contracts</div>
-                          <div className="stat-value">{calculations.remaining.plain}</div>
-                        </div>
-                      )}
-                      {calculations.remaining.legacyCoins > 0 && (
-                        <div className="stat-card legacy">
-                          <div className="stat-label">
-                            <Coins size={16} /> Elite Legacy Coins
-                          </div>
-                          <div className="stat-value">{calculations.remaining.legacyCoins}</div>
-                        </div>
-                      )}
-                    </div>
                     {calculations.remaining.totalPlainEquiv > 0 && (
-                      <div className="total-box">
-                        <div className="stat-label">Still Needed Contracts (Plain Equivalent)</div>
-                        <div className="total-value">{calculations.remaining.totalPlainEquiv.toLocaleString()}</div>
-                      </div>
+                      <>
+                        <div className="subsection-title" style={{marginBottom: '12px', color: '#d1d5db'}}>Godfather Contracts</div>
+                        <div className="stats-grid">
+                          {calculations.remaining.grand > 0 && (
+                            <div className="stat-card grand">
+                              <div className="stat-label">Grand Contracts</div>
+                              <div className="stat-value">{calculations.remaining.grand}</div>
+                            </div>
+                          )}
+                          {calculations.remaining.elite > 0 && (
+                            <div className="stat-card elite">
+                              <div className="stat-label">Elite Contracts</div>
+                              <div className="stat-value">{calculations.remaining.elite}</div>
+                            </div>
+                          )}
+                          {calculations.remaining.rare > 0 && (
+                            <div className="stat-card rare">
+                              <div className="stat-label">Rare Contracts</div>
+                              <div className="stat-value">{calculations.remaining.rare}</div>
+                            </div>
+                          )}
+                          {calculations.remaining.simple > 0 && (
+                            <div className="stat-card simple">
+                              <div className="stat-label">Simple Contracts</div>
+                              <div className="stat-value">{calculations.remaining.simple}</div>
+                            </div>
+                          )}
+                          {calculations.remaining.plain > 0 && (
+                            <div className="stat-card plain">
+                              <div className="stat-label">Plain Contracts</div>
+                              <div className="stat-value">{calculations.remaining.plain}</div>
+                            </div>
+                          )}
+                        </div>
+                        <div className="total-box">
+                          <div className="stat-label">Still Needed Contracts (Plain Equivalent)</div>
+                          <div className="total-value">{calculations.remaining.totalPlainEquiv.toLocaleString()}</div>
+                        </div>
+                      </>
+                    )}
+
+                    {calculations.remaining.totalLegacyPlainEquiv > 0 && (
+                      <>
+                        <div className="subsection-title" style={{marginTop: '24px', marginBottom: '12px', color: '#fcd34d', display: 'flex', alignItems: 'center', gap: '8px'}}>
+                          <Coins size={18} /> Legacy Coins
+                        </div>
+                        <div className="stats-grid">
+                          {calculations.remaining.legacyGrand > 0 && (
+                            <div className="stat-card legacy">
+                              <div className="stat-label">Grand Legacy</div>
+                              <div className="stat-value">{calculations.remaining.legacyGrand}</div>
+                            </div>
+                          )}
+                          {calculations.remaining.legacyElite > 0 && (
+                            <div className="stat-card legacy">
+                              <div className="stat-label">Elite Legacy</div>
+                              <div className="stat-value">{calculations.remaining.legacyElite}</div>
+                            </div>
+                          )}
+                          {calculations.remaining.legacyRare > 0 && (
+                            <div className="stat-card legacy">
+                              <div className="stat-label">Rare Legacy</div>
+                              <div className="stat-value">{calculations.remaining.legacyRare}</div>
+                            </div>
+                          )}
+                          {calculations.remaining.legacySimple > 0 && (
+                            <div className="stat-card legacy">
+                              <div className="stat-label">Simple Legacy</div>
+                              <div className="stat-value">{calculations.remaining.legacySimple}</div>
+                            </div>
+                          )}
+                          {calculations.remaining.legacyPlain > 0 && (
+                            <div className="stat-card legacy">
+                              <div className="stat-label">Plain Legacy</div>
+                              <div className="stat-value">{calculations.remaining.legacyPlain}</div>
+                            </div>
+                          )}
+                        </div>
+                        <div className="total-box">
+                          <div className="stat-label">Still Needed Legacy Coins (Plain Equivalent)</div>
+                          <div className="total-value">{calculations.remaining.totalLegacyPlainEquiv.toLocaleString()}</div>
+                          <div className="stat-label" style={{marginTop: '8px', fontSize: '11px', color: '#9ca3af'}}>
+                            ({(calculations.remaining.totalLegacyPlainEquiv / 64).toFixed(0)} Elite Grade)
+                          </div>
+                        </div>
+                      </>
                     )}
                   </>
                 )}
@@ -356,7 +535,7 @@ const GodfatherCalculator = () => {
           <div className="info-section">
             <div className="section-header">
               <Info size={20} />
-              <h3>Contract Conversions</h3>
+              <h3>Contract & Legacy Coin Conversions</h3>
             </div>
             <div className="conversions">
               <div>1 Simple = 4 Plain</div>
@@ -365,7 +544,7 @@ const GodfatherCalculator = () => {
               <div>1 Grand = 4 Elite (256 Plain)</div>
             </div>
             <div className="note">
-              * Legacy coins required from Grand+1 onwards ({equipmentCosts[equipmentType].legacyCoins} per upgrade)
+              * All legacy coin numbers shown are in Plain Equivalent format (same as contracts). Legacy coins are required in Elite grade from Grand+1 onwards ({equipmentCosts[equipmentType].legacyCoins} Elite grade per upgrade). Conversion: 1 Simple = 4 Plain, 1 Rare = 4 Simple (16 Plain), 1 Elite = 4 Rare (64 Plain), 1 Grand = 4 Elite (256 Plain)
             </div>
           </div>
 
@@ -375,6 +554,16 @@ const GodfatherCalculator = () => {
               {equipmentType.charAt(0).toUpperCase() + equipmentType.slice(1)}: {dismantleValues[equipmentType]} Plain Contracts
             </div>
           </div>
+        </div>
+        
+        <div className="footer-support">
+          <p>
+            💜 Enjoyed this calculator? Support the creator by subscribing to{' '}
+            <a href="https://www.youtube.com/c/Kserske" target="_blank" rel="noopener noreferrer">
+              Kserske's YouTube Channel
+            </a>
+            {' '}and consider donating via YouTube comments!
+          </p>
         </div>
       </div>
     </div>

@@ -10,7 +10,7 @@ body {
 
 .calculator-container {
   min-height: 100vh;
-  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #1a1a2e 100%);
+  background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 50%, #0a0a0a 100%);
   padding: 20px;
 }
 
@@ -20,11 +20,12 @@ body {
 }
 
 .calculator-card {
-  background: #2a2a3e;
+  background: #1a1a1a;
   border-radius: 12px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
   padding: 30px;
   color: #ffffff;
+  border: 1px solid #2a2a2a;
 }
 
 .header {
@@ -58,9 +59,9 @@ body {
 .form-group select,
 .input-group input {
   width: 100%;
-  background: #1e1e2e;
+  background: #0f0f0f;
   color: #ffffff;
-  border: 2px solid #6d28d9;
+  border: 2px solid #4a4a4a;
   border-radius: 8px;
   padding: 12px;
   font-size: 16px;
@@ -81,10 +82,11 @@ body {
 }
 
 .inventory-section {
-  background: #3730a3;
+  background: #252525;
   border-radius: 8px;
   padding: 20px;
   margin-bottom: 24px;
+  border: 1px solid #3a3a3a;
 }
 
 .section-header {
@@ -126,9 +128,9 @@ body {
 
 .input-group input {
   width: 100%;
-  background: #1e1e2e;
+  background: #0f0f0f;
   color: #ffffff;
-  border: 2px solid #6d28d9;
+  border: 2px solid #4a4a4a;
   border-radius: 6px;
   padding: 8px;
   font-size: 14px;
@@ -141,8 +143,19 @@ body {
   margin-top: 12px;
 }
 
+.dismantle-note {
+  text-align: center;
+  color: #a0aec0;
+  font-size: 11px;
+  margin-top: 8px;
+  padding: 8px;
+  background: #1a1a1a;
+  border-radius: 6px;
+  line-height: 1.4;
+}
+
 .legacy-section {
-  border-top: 2px solid #4c1d95;
+  border-top: 2px solid #3a3a3a;
   padding-top: 16px;
 }
 
@@ -151,7 +164,7 @@ body {
   max-width: 300px;
   margin: 0 auto;
   display: block;
-  background: #1e1e2e;
+  background: #0f0f0f;
   color: #ffffff;
   border: 2px solid #fbbf24;
   border-radius: 8px;
@@ -161,18 +174,21 @@ body {
 }
 
 .results-section {
-  background: linear-gradient(135deg, #5b21b6 0%, #4338ca 100%);
+  background: #2a2a2a;
   border-radius: 8px;
   padding: 24px;
   margin-bottom: 16px;
+  border: 1px solid #3a3a3a;
 }
 
 .results-section.remaining {
-  background: linear-gradient(135deg, #065f46 0%, #047857 100%);
+  background: #1e2a1e;
+  border: 1px solid #2d4a2d;
 }
 
 .results-section.error {
-  background: linear-gradient(135deg, #7c2d12 0%, #991b1b 100%);
+  background: #2a1e1e;
+  border: 1px solid #4a2d2d;
   text-align: center;
 }
 
@@ -190,9 +206,10 @@ body {
 }
 
 .stat-card {
-  background: #1e1e2e;
+  background: #1a1a1a;
   border-radius: 8px;
   padding: 16px;
+  border: 1px solid #2a2a2a;
 }
 
 .stat-card.legacy {
@@ -238,9 +255,10 @@ body {
 }
 
 .total-box {
-  background: #1e1e2e;
+  background: #1a1a1a;
   border-radius: 8px;
   padding: 16px;
+  border: 1px solid #2a2a2a;
 }
 
 .total-value {
@@ -258,10 +276,11 @@ body {
 }
 
 .info-section {
-  background: #374151;
+  background: #252525;
   border-radius: 8px;
   padding: 16px;
   margin-bottom: 16px;
+  border: 1px solid #3a3a3a;
 }
 
 .conversions {
@@ -281,9 +300,10 @@ body {
 }
 
 .dismantle-section {
-  background: #374151;
+  background: #252525;
   border-radius: 8px;
   padding: 16px;
+  border: 1px solid #3a3a3a;
 }
 
 .dismantle-section h3 {
@@ -296,6 +316,62 @@ body {
   color: #fbbf24;
   font-size: 20px;
   font-weight: bold;
+}
+
+.support-section {
+  background: #252525;
+  border-radius: 8px;
+  padding: 20px;
+  margin-top: 16px;
+  border: 1px solid #3a3a3a;
+  text-align: center;
+}
+
+.support-section p {
+  color: #d1d5db;
+  font-size: 14px;
+  line-height: 1.6;
+  margin: 0;
+}
+
+.support-section a {
+  color: #a78bfa;
+  text-decoration: none;
+  font-weight: 600;
+  transition: color 0.3s;
+}
+
+.support-section a:hover {
+  color: #c4b5fd;
+  text-decoration: underline;
+}
+
+.footer-support {
+  background: #2a2a3e;
+  border-radius: 8px;
+  padding: 20px;
+  margin-top: 20px;
+  text-align: center;
+  border: 2px solid #a78bfa;
+}
+
+.footer-support p {
+  color: #e5e7eb;
+  font-size: 15px;
+  line-height: 1.6;
+  margin: 0;
+}
+
+.footer-support a {
+  color: #fbbf24;
+  text-decoration: none;
+  font-weight: 700;
+  transition: all 0.3s;
+}
+
+.footer-support a:hover {
+  color: #fcd34d;
+  text-decoration: underline;
 }
 
 @media (max-width: 768px) {
