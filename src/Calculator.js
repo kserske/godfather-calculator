@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { Calculator, Info, Package, Coins } from 'lucide-react';
 import './Calculator.css';
 
@@ -12,6 +12,14 @@ const GodfatherCalculator = () => {
   const [ownedRare, setOwnedRare] = useState(0);
   const [ownedElite, setOwnedElite] = useState(0);
   const [ownedGrand, setOwnedGrand] = useState(0);
+  
+  // Elite equipment counts
+  const [eliteEquipTops, setEliteEquipTops] = useState(0);
+  const [eliteEquipRange, setEliteEquipRange] = useState(0);
+  const [eliteEquipMelee, setEliteEquipMelee] = useState(0);
+  const [eliteEquipPants, setEliteEquipPants] = useState(0);
+  const [eliteEquipShoes, setEliteEquipShoes] = useState(0);
+  const [eliteEquipAccessory, setEliteEquipAccessory] = useState(0);
   
   const [ownedLegacyPlain, setOwnedLegacyPlain] = useState(0);
   const [ownedLegacySimple, setOwnedLegacySimple] = useState(0);
@@ -60,6 +68,15 @@ const GodfatherCalculator = () => {
     const grandPlusOneIdx = levels.indexOf('grand+1');
     return targetIdx >= grandPlusOneIdx;
   }, [targetLevel]);
+
+  // Calculate elite equipment plain contract value
+  const eliteEquipmentPlainContracts = 
+    (eliteEquipTops * dismantleValues.tops) +
+    (eliteEquipRange * dismantleValues.range) +
+    (eliteEquipMelee * dismantleValues.melee) +
+    (eliteEquipPants * dismantleValues.pants) +
+    (eliteEquipShoes * dismantleValues.shoes) +
+    (eliteEquipAccessory * dismantleValues.accessory);
 
   const calculations = useMemo(() => {
     const startIdx = levels.indexOf(currentLevel);
@@ -149,8 +166,18 @@ const GodfatherCalculator = () => {
     
     consolidatedLegacyPlain = legacyInPlainEquiv;
 
-    // Calculate owned totals
-    const ownedTotal = ownedPlain + (ownedSimple * 4) + (ownedRare * 16) + (ownedElite * 64) + (ownedGrand * 256);
+    // Calculate owned totals - INCLUDING elite equipment value
+    const ownedContractsManual = ownedPlain + (ownedSimple * 4) + (ownedRare * 16) + (ownedElite * 64) + (ownedGrand * 256);
+    const ownedTotal = ownedContractsManual + eliteEquipmentPlainContracts;
+    
+    console.log('Contract Debug:', {
+      required: totalPlainEquiv,
+      ownedManual: ownedContractsManual,
+      ownedEliteEquip: eliteEquipmentPlainContracts,
+      ownedTotal: ownedTotal,
+      remaining: totalPlainEquiv - ownedTotal
+    });
+    
     // Legacy coins inventory converted to Plain equivalent
     const ownedLegacyTotal = ownedLegacyPlain + (ownedLegacySimple * 4) + (ownedLegacyRare * 16) + (ownedLegacyElite * 64) + (ownedLegacyGrand * 256);
     
@@ -265,36 +292,130 @@ const GodfatherCalculator = () => {
               <div className="inventory-grid">
                 <div className="input-group">
                   <label>Grand</label>
-                  <input type="number" min="0" value={ownedGrand} 
+                  <input type="number" min="0" value={ownedGrand} placeholder="0"
                     onChange={(e) => setOwnedGrand(parseInt(e.target.value) || 0)} />
                 </div>
                 <div className="input-group">
                   <label>Elite</label>
-                  <input type="number" min="0" value={ownedElite} 
+                  <input type="number" min="0" value={ownedElite} placeholder="0"
                     onChange={(e) => setOwnedElite(parseInt(e.target.value) || 0)} />
                 </div>
                 <div className="input-group">
                   <label>Rare</label>
-                  <input type="number" min="0" value={ownedRare} 
+                  <input type="number" min="0" value={ownedRare} placeholder="0"
                     onChange={(e) => setOwnedRare(parseInt(e.target.value) || 0)} />
                 </div>
                 <div className="input-group">
                   <label>Simple</label>
-                  <input type="number" min="0" value={ownedSimple} 
+                  <input type="number" min="0" value={ownedSimple} placeholder="0"
                     onChange={(e) => setOwnedSimple(parseInt(e.target.value) || 0)} />
                 </div>
                 <div className="input-group">
                   <label>Plain</label>
-                  <input type="number" min="0" value={ownedPlain} 
+                  <input type="number" min="0" value={ownedPlain} placeholder="0"
                     onChange={(e) => setOwnedPlain(parseInt(e.target.value) || 0)} />
+                </div>
+                <div className="input-group elite-equip-display">
+                  <label>Elite Equipment Value</label>
+                  <input type="text" value={eliteEquipmentPlainContracts.toLocaleString()} 
+                    readOnly className="readonly-input" />
                 </div>
               </div>
               <div className="total-owned">
-                Total Contracts (Plain Equiv): {(ownedPlain + (ownedSimple * 4) + (ownedRare * 16) + (ownedElite * 64) + (ownedGrand * 256)).toLocaleString()}
+                Total Contracts (Plain Equiv): {(ownedPlain + (ownedSimple * 4) + (ownedRare * 16) + (ownedElite * 64) + (ownedGrand * 256) + eliteEquipmentPlainContracts).toLocaleString()}
               </div>
               <div className="dismantle-note">
                 💡 Elite Equipment Dismantle Values: Tops = {dismantleValues.tops}, Range = {dismantleValues.range}, Melee = {dismantleValues.melee}, Pants = {dismantleValues.pants}, Shoes = {dismantleValues.shoes}, Accessory = {dismantleValues.accessory} Plain Contracts
               </div>
+            </div>
+
+            <div className="elite-equipment-section">
+              <div className="subsection-title">Elite Equipment to dismantle. PLEASE ADD THIS FIRST THEN ADD YOUR CONTRACTS ABOVE TO REFRESH "STILL NEEDED"</div>
+              <div className="inventory-grid">
+                <div className="input-group">
+                  <label>Tops ({dismantleValues.tops})</label>
+                  <input 
+                    type="number" 
+                    min="0" 
+                    value={eliteEquipTops === 0 ? '' : eliteEquipTops} 
+                    placeholder="0"
+                    onChange={(e) => {
+                      const val = e.target.value === '' ? 0 : parseInt(e.target.value);
+                      setEliteEquipTops(val);
+                    }} 
+                  />
+                </div>
+                <div className="input-group">
+                  <label>Range ({dismantleValues.range})</label>
+                  <input 
+                    type="number" 
+                    min="0" 
+                    value={eliteEquipRange === 0 ? '' : eliteEquipRange} 
+                    placeholder="0"
+                    onChange={(e) => {
+                      const val = e.target.value === '' ? 0 : parseInt(e.target.value);
+                      setEliteEquipRange(val);
+                    }} 
+                  />
+                </div>
+                <div className="input-group">
+                  <label>Melee ({dismantleValues.melee})</label>
+                  <input 
+                    type="number" 
+                    min="0" 
+                    value={eliteEquipMelee === 0 ? '' : eliteEquipMelee} 
+                    placeholder="0"
+                    onChange={(e) => {
+                      const val = e.target.value === '' ? 0 : parseInt(e.target.value);
+                      setEliteEquipMelee(val);
+                    }} 
+                  />
+                </div>
+                <div className="input-group">
+                  <label>Pants ({dismantleValues.pants})</label>
+                  <input 
+                    type="number" 
+                    min="0" 
+                    value={eliteEquipPants === 0 ? '' : eliteEquipPants} 
+                    placeholder="0"
+                    onChange={(e) => {
+                      const val = e.target.value === '' ? 0 : parseInt(e.target.value);
+                      setEliteEquipPants(val);
+                    }} 
+                  />
+                </div>
+                <div className="input-group">
+                  <label>Shoes ({dismantleValues.shoes})</label>
+                  <input 
+                    type="number" 
+                    min="0" 
+                    value={eliteEquipShoes === 0 ? '' : eliteEquipShoes} 
+                    placeholder="0"
+                    onChange={(e) => {
+                      const val = e.target.value === '' ? 0 : parseInt(e.target.value);
+                      setEliteEquipShoes(val);
+                    }} 
+                  />
+                </div>
+                <div className="input-group">
+                  <label>Accessory ({dismantleValues.accessory})</label>
+                  <input 
+                    type="number" 
+                    min="0" 
+                    value={eliteEquipAccessory === 0 ? '' : eliteEquipAccessory} 
+                    placeholder="0"
+                    onChange={(e) => {
+                      const val = e.target.value === '' ? 0 : parseInt(e.target.value);
+                      setEliteEquipAccessory(val);
+                    }} 
+                  />
+                </div>
+              </div>
+              {eliteEquipmentPlainContracts > 0 && (
+                <div className="elite-equipment-total">
+                  Elite Equipment Value: +{eliteEquipmentPlainContracts.toLocaleString()} Plain Contracts
+                </div>
+              )}
             </div>
 
             {requiresLegacyCoins && (

@@ -136,6 +136,23 @@ body {
   font-size: 14px;
 }
 
+.input-group input::placeholder {
+  color: #666;
+  opacity: 0.6;
+}
+
+.elite-equip-display {
+  grid-column: span 1;
+}
+
+.readonly-input {
+  background: #2a2a2a !important;
+  color: #86efac !important;
+  font-weight: 600;
+  cursor: not-allowed;
+  border: 2px solid #4ade80 !important;
+}
+
 .total-owned {
   text-align: center;
   color: #fcd34d;
@@ -152,6 +169,20 @@ body {
   background: #1a1a1a;
   border-radius: 6px;
   line-height: 1.4;
+}
+
+.elite-equipment-section {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 2px solid #3a3a3a;
+}
+
+.elite-equipment-total {
+  text-align: center;
+  color: #86efac;
+  font-weight: 600;
+  margin-top: 12px;
+  font-size: 15px;
 }
 
 .legacy-section {
@@ -375,12 +406,30 @@ body {
 }
 
 @media (max-width: 768px) {
+  .calculator-card {
+    padding: 20px 15px;
+  }
+
+  .header h1 {
+    font-size: 22px;
+  }
+
   .level-selection {
     grid-template-columns: 1fr;
   }
   
   .inventory-grid {
     grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+  }
+
+  .input-group input {
+    padding: 10px;
+    font-size: 16px; /* Prevents zoom on iOS */
+  }
+
+  .form-group select {
+    font-size: 16px; /* Prevents zoom on iOS */
   }
   
   .stats-grid {
@@ -389,5 +438,17 @@ body {
   
   .conversions {
     grid-template-columns: 1fr;
+  }
+
+  .stat-value {
+    font-size: 28px;
+  }
+
+  .total-value {
+    font-size: 32px;
+  }
+
+  .dismantle-note {
+    font-size: 10px;
   }
 }
